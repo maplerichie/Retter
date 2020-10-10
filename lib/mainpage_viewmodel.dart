@@ -48,8 +48,7 @@ abstract class MainPageViewModelBase with Store {
   @observable
   bool hasLoadedAllAvailablePosts = false;
 
-  void goToPostPage(
-      BuildContext context, Submission submission, Function(String) goTo) {
+  void goToPostPage(BuildContext context, Submission submission, Function(String) goTo) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -61,11 +60,11 @@ abstract class MainPageViewModelBase with Store {
   }
 
   void changeToSubreddit(String subredditTextField) async {
-    if (currentSubreddit.displayName.toLowerCase() ==
-            subredditTextField.toLowerCase() &&
-        subredditTextField != defaultSubredditString) {
+    if (currentSubreddit.displayName.toLowerCase() == subredditTextField.toLowerCase() && subredditTextField != defaultSubredditString) {
       return;
     }
+    SubredditRef lastSubreddit = currentSubreddit;
+    List<Submission> lastSubmissions = submissionContent.toList();
     submissionContent.clear();
     currentSubreddit = reddit.subreddit(subredditTextField);
     hasLoadedAllAvailablePosts = false;
@@ -74,6 +73,10 @@ abstract class MainPageViewModelBase with Store {
     loadedPostSuccessfully = await _getPosts(currentSubreddit);
     if (loadedPostSuccessfully) {
       savedSubs = ObservableList.of(config.saveSubreddit(subredditTextField));
+    } else {
+      currentSubreddit = lastSubreddit;
+      submissionContent.addAll(lastSubmissions);
+      loadedPostSuccessfully = true;
     }
   }
 
@@ -128,11 +131,8 @@ abstract class MainPageViewModelBase with Store {
   Future<bool> _getPosts(SubredditRef subredditToFetchFrom) async {
     if (!hasLoadedAllAvailablePosts)
       try {
-        var subreddit = subredditToFetchFrom.hot(
-            after: submissionContent.isNotEmpty
-                ? submissionContent.last.fullname
-                : null,
-            limit: _numberOfPostsToFetch);
+        var subreddit =
+            subredditToFetchFrom.hot(after: submissionContent.isNotEmpty ? submissionContent.last.fullname : null, limit: _numberOfPostsToFetch);
 
         var posts = await subreddit.toList();
         hasLoadedAllAvailablePosts = posts.length != _numberOfPostsToFetch;
@@ -149,9 +149,7 @@ abstract class MainPageViewModelBase with Store {
 
   void _initScrollController() {
     scrollController.addListener(() {
-      if (scrollController.position.pixels ==
-              scrollController.position.maxScrollExtent &&
-          !hasLoadedAllAvailablePosts) {
+      if (scrollController.position.pixels == scrollController.position.maxScrollExtent && !hasLoadedAllAvailablePosts) {
         _getPosts(currentSubreddit);
       }
     });

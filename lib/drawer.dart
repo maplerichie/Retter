@@ -36,6 +36,7 @@ class SubDrawer extends StatelessWidget {
                   ),
                   hintText: 'Enter a subreddit',
                   hintStyle: GoogleFonts.inter(),
+                  suffixIcon: Icon(Icons.search),
                 ),
               ),
             ),
